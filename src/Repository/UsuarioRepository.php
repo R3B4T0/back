@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Usuario;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
@@ -17,9 +18,10 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $manager)
     {
         parent::__construct($registry, Usuario::class);
+        $this->manager = $manager;
     }
 
     /**
@@ -47,22 +49,22 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
             ->setFoto($foto)
             ->setRoles($role);
 
-        $this->getEntityManager->persist($usuario);
-        $this->getEntityManager->flush();
+        $this->manager->persist($usuario);
+        $this->manager->flush();
     }
 
     public function actualizaUsuario(Usuario $usuario): Usuario
     {
-        $this->getEntityManager->persist($usuario);
-        $this->getEntityManager->flush();
+        $this->manager->persist($usuario);
+        $this->manager->flush();
         
         return $usuario;
     }
 
     public function removeUsuario(Usuario $usuario)
     {
-        $this->getEntityManager->remove($usuario);
-        $this->getEntityManager->flush();
+        $this->manager->remove($usuario);
+        $this->manager->flush();
     }
 
     // /**
