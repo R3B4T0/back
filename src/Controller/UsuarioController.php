@@ -34,17 +34,19 @@ class UsuarioController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         $nombre = $data['nombre'];
+        $apellidos = $data['apellidos'];
         $email = $data['email'];
         $password = $data['password'];
         $foto = $data['foto'];
+        $telefono = $data['telefono'];
         $role = $data['role'];
 
-        if (empty($nombre) || empty($email) || empty($password) || empty($foto) || empty($role))
+        if (empty($nombre) || empty($email) || empty($password) || empty($foto) || empty($role) || empty($telefono))
         {
             throw new NotFoundHttpException('Debe rellenar todos los campos obligatorios.');
         }
 
-        $this->usuarioRepository->guardarUsuario($nombre, $email, $password, $foto, $role);
+        $this->usuarioRepository->guardarUsuario($nombre, $apellidos, $email, $password, $foto, $role, $telefono);
 
         return new JsonResponse(['status' => 'Usuario creado'], Response::HTTP_CREATED);
     }

@@ -38,15 +38,17 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
         $this->_em->flush();
     }
 
-    public function guardarUsuario($nombre, $email, $password, $foto, $role)
+    public function guardarUsuario($nombre, $apellidos, $email, $password, $foto, $role, $telefono)
     {
         $usuario = new Usuario();
 
         $usuario
             ->setNombre($nombre)
+            ->setApellidos($apellidos)
             ->setEmail($email)
             ->setPassword($password)
             ->setFoto($foto)
+            ->setTelefono($telefono)
             ->setRoles($role);
 
         $this->manager->persist($usuario);

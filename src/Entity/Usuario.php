@@ -61,6 +61,11 @@ class Usuario implements UserInterface
      */
     private $videos;
 
+    /**
+     * @ORM\Column(type="string", length=200, nullable=true)
+     */
+    private $telefono;
+
     public function __construct()
     {
         $this->videos = new ArrayCollection();
@@ -221,6 +226,18 @@ class Usuario implements UserInterface
                 $video->setUsuario(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getTelefono(): ?string
+    {
+        return $this->telefono;
+    }
+
+    public function setTelefono(?string $telefono): self
+    {
+        $this->telefono = $telefono;
 
         return $this;
     }
