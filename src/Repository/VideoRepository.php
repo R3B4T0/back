@@ -27,7 +27,7 @@ class VideoRepository extends ServiceEntityRepository
 
         $video
             ->setCodigo($youtube_url)
-            ->setUsuario($this->manager->getUser());
+            ->setUsuario($idUsuario);
 
         $this->manager->persist($video);
         $this->manager->flush();

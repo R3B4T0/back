@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Repository\UsuarioRepository;
 use App\Entity\Usuario;
+use App\Entity\Video;
+use App\Repository\VideoRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
@@ -25,10 +27,13 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 class UsuarioController extends AbstractController
 {
     private $usuarioRepository;
+    private $idUsuario;
+    private $videoRepository;
 
-    public function __construct(UsuarioRepository $usuarioRepository)
+    public function __construct(UsuarioRepository $usuarioRepository, VideoRepository $videoRepository)
     {
         $this->usuarioRepository = $usuarioRepository;
+        $this->videoRepository = $videoRepository;
     }
 
     /**
@@ -107,10 +112,28 @@ class UsuarioController extends AbstractController
                 'datosInteres' => $usuario->getDatosInteres(),
                 'foto' => $usuario->getFoto()
             ];
+            
 
             return new JsonResponse($data, Response::HTTP_OK);
         }
         return new JsonResponse(['error' => 'Usuario no logueado'], Response::HTTP_UNAUTHORIZED);
+    }
+
+    /**
+     * @Route("video", name="insertar_video", methods={"POST"})
+     */
+    public function insertar2(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        
+        $idUsuario = $this->idUsuario;
+        $codigo = $data['codigo'];
+        preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i', $codigo, $match);
+        $youtube_id = $match[1];
+
+        $this->videoRepository->insertar($youtube_id, $idUsuario);
+
+        return new JsonResponse(['status' => 'Video insertado'], Response::HTTP_CREATED);
     }
 
     /**

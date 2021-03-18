@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class VideoController
  * @package App\Controller
  * 
- * @Route(path="/api/video/")
+ * @Route(path="/video/")
  */
 class VideoController extends AbstractController
 {
@@ -27,9 +27,9 @@ class VideoController extends AbstractController
     }
 
     /**
-     * @Route("insertar/{id}", name="insertar_video", methods={"POST"})
+     * @Route("insertar", name="insertar_video", methods={"POST"})
      */
-    public function insertar(Request $request, Usuario $usuario): JsonResponse
+    public function insertar(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         
