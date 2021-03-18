@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Repository\UsuarioRepository;
 use App\Entity\Usuario;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -12,7 +14,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Firebase\JWT\JWT;
 use App\Security\JwtAuthenticator;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
@@ -40,7 +41,7 @@ class UsuarioController extends AbstractController
         $nombre = $data['nombre'];
         $apellidos = $data['apellidos'];
         $email = $data['email'];
-        $password = $data['password'];
+        $password = password_hash($data['password'], PASSWORD_BCRYPT);
         $foto = $data['foto'];
         $telefono = $data['telefono'];
         $role = $data['role'];
@@ -90,17 +91,21 @@ class UsuarioController extends AbstractController
      */
     public function perfil(Request $request, ParameterBagInterface $params, UserProviderInterface $userProvider)
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->getDoctrine()->getManager();   
         $auth = new JwtAuthenticator($em, $params);
-
+        
         $credenciales = $auth->getCredentials($request);
-
+        
         $usuario = $auth->getUser($credenciales, $userProvider);
         if ($usuario) {
 
             $data = [
                 'id' => $usuario->getId(),
-                'email' => $usuario->getEmail()
+                'email' => $usuario->getEmail(),
+                'nombre' => $usuario->getNombre(),
+                'apellidos' => $usuario->getApellidos(),
+                'datosInteres' => $usuario->getDatosInteres(),
+                'foto' => $usuario->getFoto()
             ];
 
             return new JsonResponse($data, Response::HTTP_OK);
@@ -183,5 +188,41 @@ class UsuarioController extends AbstractController
         }
 
         return new JsonResponse($data, Response::HTTP_OK);
+    }
+
+    /**
+     * @Route("login", name="login", methods={"POST"})
+     */
+    public function login(Request $request) {
+        $data = json_decode($request->getContent(), true);
+
+        $email = $data['email'];
+        $pwd = $data['password'];
+
+        if ($email && $pwd) {
+            $usuario = $this->usuarioRepository
+                    ->findOneBy(['email' => $email]);
+
+            if ($usuario) {
+                if (password_verify($pwd, $usuario->getPassword())) {
+                    // Creamos el JWT
+                    $payload = [
+                        "usuario" => $usuario->getEmail(),
+                        "exp" => (new \DateTime())->modify("+3 day")->getTimestamp()
+                    ];
+
+                    $jwt = JWT::encode($payload, $this->getParameter('jwt_secret'), 'HS256');
+                    $data = [
+                        'repuesta' => 'Se ha iniciado sesion',
+                        'userToken' => $jwt
+                    ];
+
+                    return new JsonResponse($data, Response::HTTP_OK);
+                }
+                return new JsonResponse(['error' => 'Credenciales inválidas'], Response::HTTP_NOT_FOUND);
+            }
+            return new JsonResponse(['error' => 'Credenciales inválidas'], Response::HTTP_NOT_FOUND);
+        }
+        return new JsonResponse(['error' => 'Faltan parámetros'], Response::HTTP_PARTIAL_CONTENT);
     }
 }
