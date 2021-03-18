@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Video;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,9 +15,22 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class VideoRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $manager)
     {
         parent::__construct($registry, Video::class);
+        $this->manager = $manager;
+    }
+
+    public function insertar($youtube_url, $idUsuario)
+    {
+        $video = new Video();
+
+        $video
+            ->setCodigo($youtube_url)
+            ->setUsuario($this->manager->getUser());
+
+        $this->manager->persist($video);
+        $this->manager->flush();
     }
 
     // /**

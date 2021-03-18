@@ -69,6 +69,26 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
         $this->manager->flush();
     }
 
+    public function findBandas($role)
+    {
+        $qb = $this->createQueryBuilder('u');
+        $qb->select('u')
+            ->where('u.roles LIKE :roles')
+            ->setParameter('roles', '%"' . $role . '"%');
+        
+        return $qb->getQuery()->getResult();
+    }
+
+    public function findMusicos($role)
+    {
+        $qb = $this->createQueryBuilder('u');
+        $qb->select('u')
+            ->where('u.roles LIKE :roles')
+            ->setParameter('roles', '%"' . $role . '"%');
+        
+        return $qb->getQuery()->getResult();
+    }
+
     // /**
     //  * @return Usuario[] Returns an array of Usuario objects
     //  */

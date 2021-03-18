@@ -3,13 +3,17 @@
 namespace App\Controller;
 
 use App\Repository\UsuarioRepository;
+use App\Entity\Usuario;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-
+use Firebase\JWT\JWT;
+use App\Security\JwtAuthenticator;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
  * Class UsuarioController
@@ -40,6 +44,17 @@ class UsuarioController extends AbstractController
         $foto = $data['foto'];
         $telefono = $data['telefono'];
         $role = $data['role'];
+        if ($role == "ROLE_MUSICO") {
+            $role = array(
+                "ROLE_MUSICO"
+            );
+        }
+
+        if ($role == "ROLE_BANDA") {
+            $role = array(
+                "ROLE_BANDA"
+            );
+        }
 
         if (empty($nombre) || empty($email) || empty($password) || empty($foto) || empty($role) || empty($telefono))
         {
@@ -71,11 +86,35 @@ class UsuarioController extends AbstractController
     }
 
     /**
+     * @Route("perfil", name="obtener_perfil", methods={"GET"})
+     */
+    public function perfil(Request $request, ParameterBagInterface $params, UserProviderInterface $userProvider)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $auth = new JwtAuthenticator($em, $params);
+
+        $credenciales = $auth->getCredentials($request);
+
+        $usuario = $auth->getUser($credenciales, $userProvider);
+        if ($usuario) {
+
+            $data = [
+                'id' => $usuario->getId(),
+                'email' => $usuario->getEmail()
+            ];
+
+            return new JsonResponse($data, Response::HTTP_OK);
+        }
+        return new JsonResponse(['error' => 'Usuario no logueado'], Response::HTTP_UNAUTHORIZED);
+    }
+
+    /**
      * @Route("usuarios", name="obtener_usuarios", methods={"GET"})
      */
     public function getAll(): JsonResponse
     {
-        $usuarios = $this->usuarioRepository->findAll();
+        $role = 'ROLE_MUSICO';
+        $usuarios = $this->usuarioRepository->findMusicos($role);
         $data = [];
 
         foreach ($usuarios as $usuario) {
@@ -120,5 +159,29 @@ class UsuarioController extends AbstractController
         $this->usuarioRepository->removeUsuario($usuario);
 
         return new JsonResponse(['status' => 'Usuario borrado'], Response::HTTP_OK);
+    }
+
+    /**
+     * @Route("bandas", name="obtener_bandas", methods={"GET"})
+     */
+    public function bandas(): JsonResponse
+    {
+        $role = 'ROLE_BANDA';
+        $bandas = $this->usuarioRepository->findBandas($role);
+        $data = [];
+
+        foreach ($bandas as $banda) {
+            $data[] = [
+                'id' => $banda->getId(),
+                'nombre' => $banda->getNombre(),
+                'apellidos' => $banda->getApellidos(),
+                'email' => $banda->getEmail(),
+                'foto' => $banda->getFoto(),
+                'telefono' => $banda->getTelefono(),
+                'role' => $banda->getRoles(),
+            ];
+        }
+
+        return new JsonResponse($data, Response::HTTP_OK);
     }
 }
