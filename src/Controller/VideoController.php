@@ -27,7 +27,7 @@ class VideoController extends AbstractController
     }
 
     /**
-     * @Route("insertar", name="insertar_video", methods={"POST"})
+     * @Route("insertar", name="insertar", methods={"POST"})
      */
     public function insertar(Request $request): JsonResponse
     {
